@@ -1,0 +1,49 @@
+import json
+import pandas as pd
+from prettytable import PrettyTable
+from datetime import datetime, timedelta
+
+# 原始 JSON 資料
+data = {
+    "channel": {
+        "id": 3089514,
+        "name": "學生到校通知",
+        "latitude": "0.0",
+        "longitude": "0.0",
+        "field1": "姓名",
+        "created_at": "2025-09-25T05:03:08Z",
+        "updated_at": "2025-09-25T05:03:16Z",
+        "last_entry_id": 6
+    },
+    "feeds": [
+        {"created_at": "2025-10-02T07:20:10Z", "entry_id": 1, "field1": "王1號到了"},
+        {"created_at": "2025-10-03T00:34:01Z", "entry_id": 2, "field1": "王1號到了"},
+        {"created_at": "2025-10-03T00:34:21Z", "entry_id": 3, "field1": "鼠2號到了"},
+        {"created_at": "2025-10-03T00:34:40Z", "entry_id": 4, "field1": "牛3號到了"},
+        {"created_at": "2025-10-03T00:37:30Z", "entry_id": 5, "field1": "虎4號到了"},
+        {"created_at": "2025-10-03T00:39:28Z", "entry_id": 6, "field1": "兔5號到了"}
+    ]
+}
+
+# 取出資料並轉成 DataFrame
+feeds = data["feeds"]
+df = pd.DataFrame(feeds)
+
+# 轉換時間格式並換算時區
+def to_taiwan_time(utc_str):
+    utc_time = datetime.strptime(utc_str, "%Y-%m-%dT%H:%M:%SZ")
+    taiwan_time = utc_time + timedelta(hours=8)
+    return taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
+
+df["本地時間"] = df["created_at"].apply(to_taiwan_time)
+df["學生"] = df["field1"].str.replace("到了", "")
+
+# 用 PrettyTable 美化輸出
+table = PrettyTable()
+table.field_names = ["編號", "學生", "UTC 時間", "台灣時間"]
+
+for _, row in df.iterrows():
+    table.add_row([row["entry_id"], row["學生"], row["created_at"], row["本地時間"]])
+
+print("📘 頻道名稱：", data["channel"]["name"])
+print(table)
