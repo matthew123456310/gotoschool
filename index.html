@@ -1,37 +1,81 @@
-import requests
-import pandas as pd
-from prettytable import PrettyTable
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>å­¸ç”Ÿåˆ°æ ¡é€šçŸ¥</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.13/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body { font-family: "Noto Sans TC", sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg">
+    <h1 class="text-2xl font-bold text-center mb-4">ğŸ“š å­¸ç”Ÿåˆ°æ ¡é€šçŸ¥</h1>
+    <div id="channel-info" class="text-center mb-4 text-gray-600"></div>
+    <table class="min-w-full table-auto border-collapse text-center">
+      <thead class="bg-blue-100">
+        <tr>
+          <th class="p-2 border">åºè™Ÿ</th>
+          <th class="p-2 border">å§“å</th>
+          <th class="p-2 border">åˆ°é”æ™‚é–“</th>
+        </tr>
+      </thead>
+      <tbody id="table-body" class="bg-white"></tbody>
+    </table>
+  </div>
 
-# ? ½Ğ§ï¦¨§A¦Û¤vªº ThingSpeak Channel ID
-CHANNEL_ID = "3089514"
+  <script>
+  // åœ¨é€™è£¡æ”¾ä½ çš„ JSON è³‡æ–™ ğŸ‘‡
+  const data = {
+    "channel": {
+      "id": 3089514,
+      "name": "å­¸ç”Ÿåˆ°æ ¡é€šçŸ¥",
+      "latitude": "0.0",
+      "longitude": "0.0",
+      "field1": "å§“å",
+      "created_at": "2025-09-25T05:03:08Z",
+      "updated_at": "2025-09-25T05:03:16Z",
+      "last_entry_id": 6
+    },
+    "feeds": [
+      { "created_at": "2025-10-02T07:20:10Z", "entry_id": 1, "field1": "ç‹1è™Ÿåˆ°äº†" },
+      { "created_at": "2025-10-03T00:34:01Z", "entry_id": 2, "field1": "ç‹1è™Ÿåˆ°äº†" },
+      { "created_at": "2025-10-03T00:34:21Z", "entry_id": 3, "field1": "é¼ 2è™Ÿåˆ°äº†" },
+      { "created_at": "2025-10-03T00:34:40Z", "entry_id": 4, "field1": "ç‰›3è™Ÿåˆ°äº†" },
+      { "created_at": "2025-10-03T00:37:30Z", "entry_id": 5, "field1": "è™4è™Ÿåˆ°äº†" },
+      { "created_at": "2025-10-03T00:39:28Z", "entry_id": 6, "field1": "å…”5è™Ÿåˆ°äº†" }
+    ]
+  };
 
-# ? ThingSpeak ¤½¶}¸ê®Æ API¡]¤£»İ­n API key¡^
-url = f"https://api.thingspeak.com/channels/{CHANNEL_ID}/feeds.json"
+  // é¡¯ç¤ºé »é“åç¨±
+  const channelInfo = document.getElementById('channel-info');
+  channelInfo.textContent = `é »é“åç¨±ï¼š${data.channel.name}`;
 
-# §ì¨ú¸ê®Æ
-response = requests.get(url)
-data = response.json()
+  // é¡¯ç¤ºè¡¨æ ¼å…§å®¹
+  const tableBody = document.getElementById('table-body');
+  data.feeds.forEach(feed => {
+    const tr = document.createElement('tr');
+    tr.classList.add('hover:bg-gray-50');
 
-# ¨ú±o feeds
-feeds = data.get("feeds", [])
-if not feeds:
-    print("?? ¨S¦³§ä¨ì feeds ¸ê®Æ¡A½ĞÀË¬dÀW¹D¬O§_¤½¶}©Î¦³¸ê®Æ¡C")
-else:
-    # Âà¦¨ DataFrame
-    df = pd.DataFrame(feeds)
-    
-    # ÀË¬d¬O§_¦³ field1 Äæ¦ì
-    if "field1" in df.columns:
-        df["¾Ç¥Í"] = df["field1"].str.replace("¨ì¤F", "")
-    else:
-        df["¾Ç¥Í"] = "(¥¼´£¨Ñ)"
+    const idCell = document.createElement('td');
+    idCell.textContent = feed.entry_id;
+    idCell.className = 'border p-2';
 
-    # ¥Î PrettyTable ¬ü¤Æ¿é¥X
-    table = PrettyTable()
-    table.field_names = ["½s¸¹", "¾Ç¥Í"]
+    const nameCell = document.createElement('td');
+    nameCell.textContent = feed.field1;
+    nameCell.className = 'border p-2';
 
-    for _, row in df.iterrows():
-        table.add_row([row.get("entry_id", "-"), row["¾Ç¥Í"]])
+    const timeCell = document.createElement('td');
+    const localTime = new Date(feed.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    timeCell.textContent = localTime;
+    timeCell.className = 'border p-2';
 
-    print(f"?? ÀW¹D¦WºÙ¡G {data.get('channel', {}).get('name', '¥¼©R¦W')}")
-    print(table)
+    tr.appendChild(idCell);
+    tr.appendChild(nameCell);
+    tr.appendChild(timeCell);
+    tableBody.appendChild(tr);
+  });
+  </script>
+</body>
+</html>
