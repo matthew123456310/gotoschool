@@ -12,7 +12,7 @@
 <body class="bg-gray-100 text-gray-800">
   <div class="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg">
     <h1 class="text-2xl font-bold text-center mb-4">📚 學生到校通知</h1>
-    <div id="channel-info" class="text-center mb-4 text-gray-600"></div>
+    <div id="channel-info" class="text-center mb-4 text-gray-600">讀取中...</div>
     <table class="min-w-full table-auto border-collapse text-center">
       <thead class="bg-blue-100">
         <tr>
@@ -26,56 +26,54 @@
   </div>
 
   <script>
-  // 在這裡放你的 JSON 資料 👇
-  const data = {
-    "channel": {
-      "id": 3089514,
-      "name": "學生到校通知",
-      "latitude": "0.0",
-      "longitude": "0.0",
-      "field1": "姓名",
-      "created_at": "2025-09-25T05:03:08Z",
-      "updated_at": "2025-09-25T05:03:16Z",
-      "last_entry_id": 6
-    },
-    "feeds": [
-      { "created_at": "2025-10-02T07:20:10Z", "entry_id": 1, "field1": "王1號到了" },
-      { "created_at": "2025-10-03T00:34:01Z", "entry_id": 2, "field1": "王1號到了" },
-      { "created_at": "2025-10-03T00:34:21Z", "entry_id": 3, "field1": "鼠2號到了" },
-      { "created_at": "2025-10-03T00:34:40Z", "entry_id": 4, "field1": "牛3號到了" },
-      { "created_at": "2025-10-03T00:37:30Z", "entry_id": 5, "field1": "虎4號到了" },
-      { "created_at": "2025-10-03T00:39:28Z", "entry_id": 6, "field1": "兔5號到了" }
-    ]
-  };
+    // ⚙️ 請在這裡改成你自己的 ThingSpeak Channel ID
+    const channelId = 3089514; // 👈 你的 channel ID
+    const apiUrl = `https://api.thingspeak.com/channels/${channelId}/feeds.json`;
 
-  // 顯示頻道名稱
-  const channelInfo = document.getElementById('channel-info');
-  channelInfo.textContent = `頻道名稱：${data.channel.name}`;
+    async function loadData() {
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
 
-  // 顯示表格內容
-  const tableBody = document.getElementById('table-body');
-  data.feeds.forEach(feed => {
-    const tr = document.createElement('tr');
-    tr.classList.add('hover:bg-gray-50');
+        const channelInfo = document.getElementById('channel-info');
+        const tableBody = document.getElementById('table-body');
+        tableBody.innerHTML = ""; // 清空舊資料
 
-    const idCell = document.createElement('td');
-    idCell.textContent = feed.entry_id;
-    idCell.className = 'border p-2';
+        // 顯示頻道名稱
+        channelInfo.textContent = `頻道名稱：${data.channel.name}`;
 
-    const nameCell = document.createElement('td');
-    nameCell.textContent = feed.field1;
-    nameCell.className = 'border p-2';
+        // 顯示表格內容
+        data.feeds.forEach(feed => {
+          const tr = document.createElement('tr');
+          tr.classList.add('hover:bg-gray-50');
 
-    const timeCell = document.createElement('td');
-    const localTime = new Date(feed.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-    timeCell.textContent = localTime;
-    timeCell.className = 'border p-2';
+          const idCell = document.createElement('td');
+          idCell.textContent = feed.entry_id;
+          idCell.className = 'border p-2';
 
-    tr.appendChild(idCell);
-    tr.appendChild(nameCell);
-    tr.appendChild(timeCell);
-    tableBody.appendChild(tr);
-  });
+          const nameCell = document.createElement('td');
+          nameCell.textContent = feed.field1 || "—";
+          nameCell.className = 'border p-2';
+
+          const timeCell = document.createElement('td');
+          const localTime = new Date(feed.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+          timeCell.textContent = localTime;
+          timeCell.className = 'border p-2';
+
+          tr.appendChild(idCell);
+          tr.appendChild(nameCell);
+          tr.appendChild(timeCell);
+          tableBody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("資料讀取錯誤：", err);
+        document.getElementById('channel-info').textContent = '⚠️ 無法讀取資料';
+      }
+    }
+
+    loadData();
+    // 每 30 秒自動更新
+    setInterval(loadData, 30000);
   </script>
 </body>
 </html>
